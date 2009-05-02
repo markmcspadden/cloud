@@ -59,16 +59,33 @@ class Palette
 end
 
 class WordCloud
+  # Options:
+  ## common: Allow for case by case common words
+  ## common_regex: Use a regex instead of a string for common word comparison
+  ## phrases: Currently only support two word phrases with spaces like 'credit union'
   attr_accessor :text, :word_freq, :min_text_size, :font, :pdf, :boxes, :canvas, :ordered_boxes, :placed_boxes, 
-                :placements, :palette, :common, :max_words, :pdf_file, :min_freq, :storage, :distance_func
+                :placements, :palette, :common, :max_words, :pdf_file, :min_freq, :storage, :distance_func, :common_regex, :phrases
   def initialize(options)
     if (!options[:file] && !options[:rss] && !options[:delicious])
       raise ArgumentError, "invalid argument, must specify either a filename or an url"
     end
+    
+    # Add hardcoded common words
+    # Also add case by case common words via the options
     if options[:lang] == "DA"
-      @common = COMMON_DA + COMMON_EN
+      @common = COMMON_DA + COMMON_EN + options[:common].to_a
     else
-      @common = COMMON_EN
+      @common = COMMON_EN + options[:common].to_a
+    end
+    
+    # Added common_regex option
+    if options[:common_regex]
+      @common_regex = options[:common_regex]
+    end
+    
+    # Added phrases option
+    if options[:phrases]
+      @phrases = options[:phrases]
     end
     
     @max_words = options[:max_words] ? options[:max_words] : 100
@@ -142,7 +159,7 @@ class WordCloud
     freq = Hash.new(0)
     count = 0
 
-    words.each{|word|
+    words.each_with_index{|word, idx|
       if word =~ /([\W\d]+)/
         word = word.delete $1
       end
@@ -150,11 +167,18 @@ class WordCloud
         next
       end
       word = word.downcase      
-        
-      if !self.common.include? word
+          
+      if !self.common.include?(word) && !word.to_s.match(self.common_regex)
         word = converter.iconv(word)
         freq[word] = freq[word] +1
         count = count + 1
+      end
+      
+      # Added phrase finding
+      if !self.phrases.empty? && self.phrases.include?([word, words[idx+1]].compact.join(" "))
+        phrase = converter.iconv([word, words[idx+1]].compact.join(" "))
+        freq[phrase] = freq[phrase] +1
+        count =count + 1
       end
     }
     j = 1
