@@ -172,7 +172,7 @@ class WordCloud
       end
       word = word.downcase      
           
-      if !self.common.include?(word) && !word.to_s.match(self.common_regex)
+      if !self.common.include?(word) && (self.common_regex && !word.to_s.match(self.common_regex))
         word = converter.iconv(word)
         freq[word] = freq[word] +1
         count = count + 1
