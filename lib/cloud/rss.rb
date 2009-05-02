@@ -144,7 +144,7 @@ module Hpricot
   class << self
     def uxs(str)
       str.to_s.
-          gsub(/\&\w+;/) { |x| (XChar::PREDEFINED_U[x] || ??).chr }.
+          # gsub(/\&\w+;/) { |x| (XChar::PREDEFINED_U[x] || ??).chr }.
           gsub(/\&\#(\d+);/) { [$1.to_i].pack("U*") }.
           gsub(/\&\#x(\d+);/) { [$1].pack("H*") }
     end
