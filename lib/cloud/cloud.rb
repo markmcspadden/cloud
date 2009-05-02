@@ -66,7 +66,7 @@ class WordCloud
   attr_accessor :text, :word_freq, :min_text_size, :font, :pdf, :boxes, :canvas, :ordered_boxes, :placed_boxes, 
                 :placements, :palette, :common, :max_words, :pdf_file, :min_freq, :storage, :distance_func, :common_regex, :phrases
   def initialize(options)
-    if (!options[:file] && !options[:rss] && !options[:delicious])
+    if (!options[:file] && !options[:html] && !options[:rss] && !options[:delicious])
       raise ArgumentError, "invalid argument, must specify either a filename or an url"
     end
     
@@ -98,6 +98,10 @@ class WordCloud
         end
       end
       @word_freq = self.compute_frequencies
+    elsif options[:html]
+      doc = Hpricot(options[:html])
+      @text = doc.inner_text
+      @word_freq = self.compute_frequencies  
     elsif options[:rss]
       xml = Net::HTTP.get_response(URI.parse(options[:rss])).body
       doc = Hpricot::XML(xml)
